@@ -49,10 +49,10 @@ module.exports = function (config) {
     };
 
     let defaultConfig = {
-      width: 500,
-      height: 500,
-      option,
-      enableAutoDispose: true
+        width: 500,
+        height: 500,
+        option,
+        enableAutoDispose: true
     }
 
     config = Object.assign({}, defaultConfig, config)
@@ -60,24 +60,30 @@ module.exports = function (config) {
     config.option.animation = false;
     chart = echarts.init(new Canvas(parseInt(config.width, 10), parseInt(config.height, 10)));
     chart.setOption(config.option);
+    const exportOpts = {
+        backgroundColor: '#fff',
+        ...config.exportOpts,
+    };
+    const dataURL = chart.getDataURL(exportOpts);
+    const base64Image = dataURL.split(';base64,').pop();
+    const imageBuffer = Buffer.from(base64Image, 'base64');
     if (config.path) {
         try {
-            fs.writeFileSync(config.path, chart.getDom().toBuffer());
-            if(config.enableAutoDispose){
-              chart.dispose();
+            fs.writeFileSync(config.path, imageBuffer, { encoding: 'base64' });
+            if (config.enableAutoDispose) {
+                chart.dispose();
             }
             console.log("Create Img:" + config.path)
         } catch (err) {
             console.error("Error: Write File failed" + err.message)
         }
-        
+
     } else {
-        var buffer = chart.getDom().toBuffer();
-        try{
-          if(config.enableAutoDispose){
-            chart.dispose();
-          }
-        }catch(e){}
-        return buffer;
+        try {
+            if (config.enableAutoDispose) {
+                chart.dispose();
+            }
+        } catch (e) { }
+        return imageBuffer;
     }
 }
